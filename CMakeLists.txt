@@ -1,0 +1,20 @@
+cmake_minimum_required(VERSION 2.8)
+
+project(GStreamerOpenCVExamples)
+find_package( OpenCV REQUIRED )
+SET(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++11 -pthread")
+file(GLOB SOURCES
+    ./*.h
+    ./*.cpp
+)
+
+set(PRJOECT_NAME_WEBCAM "gstExampleWebcamToRTP")
+set(PROJECT_NAME_STREAM "gstExampleRTPtoAppsink")
+
+add_executable( ${PRJOECT_NAME_WEBCAM} ${SOURCES})
+target_link_libraries( ${PRJOECT_NAME_WEBCAM} ${OpenCV_LIBS} )
+SET_TARGET_PROPERTIES(${PRJOECT_NAME_WEBCAM} PROPERTIES COMPILE_DEFINITIONS "COMPILE_WEBCAM")
+
+add_executable(${PROJECT_NAME_STREAM} ${SOURCES})
+target_link_libraries( ${PROJECT_NAME_STREAM} ${OpenCV_LIBS} )
+SET_TARGET_PROPERTIES(${PROJECT_NAME_STREAM} PROPERTIES COMPILE_DEFINITIONS "COMPILE_STREAM")
