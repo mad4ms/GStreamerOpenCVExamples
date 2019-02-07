@@ -153,6 +153,7 @@ Now compile OpenCV from source. I've got a script that configures and builds Ope
 
 ```
 git clone https://github.com/madams1337/GStreamerOpenCVExamples.git
+cd GStreamerOpenCVExamples
 mkdir -p build
 cd build
 cmake ..
