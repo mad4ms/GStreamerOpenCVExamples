@@ -2,10 +2,12 @@
 #define COMMANDS_H
 
 #include <string>
-
+/** MISC */
 // Assume your webcam as device video0. You can check the format by executing v4l2-ctl --list-formats-ext
 // Usually, Ubuntu gives you the pixel format YUYV (uncompressed) with different resolutions.
 // E.g. the best my shitty webcam can do is 640x480 on YUYV (or YUY2 in gstreamer string)
+
+/** WEBCAM TO APPSINK TO RTP */
 
 /// Funny note. If you exec "export GST_DEBUG=4" and then try something like displaying your webcam on the autovideosink
 /// like this "gst-launch-1.0 v4l2src ! videoconvert ! autovideosink", the debug spits out all possible caps that you
@@ -17,11 +19,17 @@ const std::string webcam2appsink_JPEG_1280_720 = "v4l2src device=/dev/video0 ! i
 // I got this one from https://gist.github.com/esrever10/7d39fe2d4163c5b2d7006495c3c911bb.
 /// I think the src appsink is clear. After this, videoconvert it so the x264enc can do it's work. After that, don't forger to acutally attach the payload
 /// before u sink it into udp sink.
-const std::string appsink2rtp_H264 = "appsrc ! videoconvert ! x264enc tune=zerolatency bitrate=500 speed-preset=superfast ! rtph264pay ! udpsink host=127.0.0.1 port=5000";
 
-const std::string appsink2rtp_H264_multi = "appsrc ! videoconvert ! x264enc tune=zerolatency bitrate=500 speed-preset=superfast ! rtph264pay ! udpsink host=239.255.0.1 port=5000 auto-multicast=true";
+ const std::string appsink2rtp_H264 = "appsrc ! videoconvert ! x264enc tune=zerolatency bitrate=500 speed-preset=superfast ! rtph264pay ! udpsink host=127.0.0.1 port=5000";
+//const std::string appsink2rtp_H264 = "appsrc ! videoconvert ! \
+x264enc tune=zerolatency bitrate=500 byte-stream=true speed-preset=superfast threads=4 key-int-max=15 intra-refresh=true ! h264parse ! mpegtsmux !  udpsink host=127.0.0.1 port=5000";
 
 
+ const std::string appsink2rtp_H264_multi = "appsrc ! videoconvert ! x264enc tune=zerolatency bitrate=500 speed-preset=superfast ! rtph264pay ! udpsink host=239.255.0.1 port=5000 auto-multicast=true";
+//const std::string appsink2rtp_H264_multi = "appsrc ! videoconvert ! \
+//x264enc tune=zerolatency bitrate=500 byte-stream=true speed-preset=superfast threads=4 key-int-max=15 intra-refresh=true ! h264parse ! mpegtsmux ! udpsink host=239.255.0.1 port=5000 auto-multicast=true";
+
+/** RTP TO APPSINK */
 
 
 /// Funny note: Use the following lines as an sdp file (e.g. test.sdp) for watching the videostream in VLC. (of course without the ///)
@@ -35,6 +43,8 @@ const std::string appsink2rtp_H264_multi = "appsrc ! videoconvert ! x264enc tune
 
 // gst-launch-1.0 -v udpsrc port=5000 caps = "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtph264depay ! decodebin ! videoconvert ! autovideosink
 const std::string rtp2appsink_H264 = "udpsrc port=5000 ! application/x-rtp, media=video, clock-rate=90000, encoding-name=H264, payload=96 ! rtph264depay ! decodebin ! videoconvert ! appsink";
+//const std::string rtp2appsink_H264 = "udpsrc port=5000 ! application/x-rtp, media=video, clock-rate=90000, encoding-name=H264, payload=96 ! tsparse ! tsdemux ! h264parse | avdec_h264 ! videoconvert ! appsink";
+
 
 /// MULTICAST! Make sure that your router supports Multicast. Usually it's a setting like "Optimize for IPTV" or stuff like that. I assume that you can google it.
 /// Funny note: Use the following lines as an sdp file (e.g. test.sdp) for watching the videostream in VLC. (of course without the ///)
@@ -46,5 +56,13 @@ const std::string rtp2appsink_H264 = "udpsrc port=5000 ! application/x-rtp, medi
 /// If everythink went fine, the stream should show up on VLC.
 /// gg.
 const std::string rtp2appsink_H264_multi = "udpsrc multicast-group=239.255.0.1 auto-multicast=true port=5000 ! application/x-rtp, media=video, clock-rate=90000, encoding-name=H264, payload=96 ! rtph264depay ! decodebin ! videoconvert ! appsink";
+//const std::string rtp2appsink_H264_multi = "udpsrc multicast-group=239.255.0.1 auto-multicast=true port=5000 !  tsparse ! tsdemux ! h264parse | avdec_h264 ! videoconvert ! appsink";
+
+/** APPSINK TO SHARED MEMORY */
+
+const std::string appsink2sharedmemory = "appsrc ! videoconvert ! shmsink socket-path=/tmp/foo sync=true wait-for-connection=false shm-size=10000000";
+
+const std::string sharedmemory2appsink_640_480 = "shmsrc socket-path=/tmp/foo ! video/x-raw,  format=BGR, width=640, height=480, pixel-aspect-ratio=1/1, framerate=30/1 ! decodebin ! videoconvert ! appsink";
+const std::string sharedmemory2appsink_1280_720 = "shmsrc socket-path=/tmp/foo ! image/jpeg, format=BGR ,width=1280,height=720,framerate=30/1 ! jpegparse ! jpegdec ! videoconvert ! appsink";
 
 #endif // COMMANDS_H

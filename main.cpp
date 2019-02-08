@@ -24,7 +24,7 @@ using namespace cv;
 /// Cuz im using 239.255.1.1 and it's working smoothly with some stuttering (key frame loss) in between.
 ///
 /// Leave commented if you wanna prototype on your local pc
-//#define MULTICAST // Define if multicast
+#define MULTICAST // Define if multicast
 
 #ifdef COMPRESSED // Select resolution based on compression
 #define WIDTH 1280
@@ -124,7 +124,92 @@ void task_rtp_to_appsink(bool show_device) {
     }
 }
 
+void task_webcam_to_appsink_to_sm(bool show_device) {
+    // Get the device string here
+#ifdef COMPRESSED
+    string tmp_device = webcam2appsink_JPEG_1280_720;
+#else
+    string tmp_device = webcam2appsink_YUY2_640_480;
+#endif
+    string tmp_out = appsink2sharedmemory;
 
+    // Initialize the capture
+    VideoCapture cap(tmp_device, CAP_GSTREAMER);
+    // Check
+    if (!cap.isOpened()) {
+        cerr << "[Error] Cannot open capture " << tmp_device << endl;
+        return;
+    } else {
+        cout << "[Success] Capture " << tmp_device << " opened." << endl;
+    }
+
+    // Initialize the writer
+    VideoWriter writer(tmp_out, CAP_GSTREAMER, 0, 30, Size(WIDTH,HEIGHT), true);
+    // Check
+    if (!writer.isOpened()) {
+        cerr << "[Error] Cannot open writer " << tmp_out << endl;
+        return;
+    } else {
+        cout << "[Success] Writer " << tmp_out << " opened." << endl;
+    }
+
+    // OpenCV frame
+    Mat frame;
+
+    // Inf loop
+
+    while (1) {
+
+        cap >> frame;
+
+        // Check if valid
+        if (frame.empty())
+            break;
+        // Show if needed
+        if (show_device) {
+            imshow("task_webcam_to_appsink_to_sm", frame);
+            waitKey(1);
+        }
+
+        writer << frame;
+    }
+    // Clean up
+    cap.release();
+    cout << tmp_device << " done." << endl;
+}
+
+void task_sm_to_appsink(bool show_device) {
+#ifdef COMPRESSED
+    string tmp_device = sharedmemory2appsink_1280_720;
+#else
+    string tmp_device = sharedmemory2appsink_640_480;
+#endif
+
+    // Initialize the writer
+    VideoCapture cap(tmp_device, CAP_GSTREAMER);
+    // Check
+    if (!cap.isOpened()) {
+        cerr << "[Error] Cannot open cap " << tmp_device << endl;
+        return;
+    } else {
+        cout << "[Success] Capture " << tmp_device << " opened." << endl;
+    }
+    // OpenCV frame
+    Mat frame;
+
+    while (1) {
+        // Read frame from v4l2src
+        cap >> frame;
+        // Check the frame
+        if (frame.empty()) {
+            break;
+        }
+        if (show_device) {
+            imshow("task_sm_to_appsink",frame);
+            waitKey(33);
+        }
+    }
+}
 
 int main() {
 #ifdef COMPILE_WEBCAM
@@ -132,6 +217,12 @@ int main() {
 #endif
 #ifdef COMPILE_STREAM
     task_rtp_to_appsink(true);
+#endif
+#ifdef COMPILE_WEBCAM_SHARED_MEMORY
+    task_webcam_to_appsink_to_sm(true);
+#endif
+#ifdef COMPILE_SHARED_MEMORY_WEBCAM
+    task_sm_to_appsink(true);
 #endif
     return 0;
 }
