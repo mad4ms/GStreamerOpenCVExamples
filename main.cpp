@@ -17,7 +17,7 @@ using namespace cv;
 /// There, you can see the pixel format and adapt it accordingly in the commands.h
 ///
 /// Just leave it commented. All webcams usually support YUYV umcompressed at this resolution.
-//#define COMPRESSED // Use jpeg compression provided by webcam
+#define COMPRESSED // Use jpeg compression provided by webcam
 
 
 /// Uncomment if you wanna stream to multicast UDP. Usually, these are the IPs > 239.x.x.x, i guess.

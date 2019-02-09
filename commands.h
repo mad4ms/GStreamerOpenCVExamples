@@ -60,9 +60,9 @@ const std::string rtp2appsink_H264_multi = "udpsrc multicast-group=239.255.0.1 a
 
 /** APPSINK TO SHARED MEMORY */
 
-const std::string appsink2sharedmemory = "appsrc ! videoconvert ! shmsink socket-path=/tmp/foo sync=true wait-for-connection=false shm-size=10000000";
+const std::string appsink2sharedmemory = "appsrc ! videoconvert ! shmsink socket-path=/tmp/foo sync=false wait-for-connection=false shm-size=10000000";
 
 const std::string sharedmemory2appsink_640_480 = "shmsrc socket-path=/tmp/foo ! video/x-raw,  format=BGR, width=640, height=480, pixel-aspect-ratio=1/1, framerate=30/1 ! decodebin ! videoconvert ! appsink";
-const std::string sharedmemory2appsink_1280_720 = "shmsrc socket-path=/tmp/foo ! image/jpeg, format=BGR ,width=1280,height=720,framerate=30/1 ! jpegparse ! jpegdec ! videoconvert ! appsink";
+const std::string sharedmemory2appsink_1280_720 = "shmsrc socket-path=/tmp/foo ! video/x-raw, format=BGR ,width=1280,height=720,framerate=30/1 ! decodebin ! videoconvert ! appsink";
 
 #endif // COMMANDS_H
